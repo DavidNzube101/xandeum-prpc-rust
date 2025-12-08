@@ -22,6 +22,7 @@ struct RpcRequest {
 
 #[derive(Deserialize)]
 struct RpcResponse<T> {
+    #[allow(dead_code)]
     jsonrpc: String,
     result: Option<T>,
     error: Option<RpcError>,
@@ -30,6 +31,7 @@ struct RpcResponse<T> {
 
 #[derive(Deserialize)]
 struct RpcError {
+    #[allow(dead_code)]
     code: i32,
     message: String,
 }
