@@ -26,6 +26,7 @@ struct RpcResponse<T> {
     jsonrpc: String,
     result: Option<T>,
     error: Option<RpcError>,
+    #[allow(dead_code)]
     id: u32,
 }
 

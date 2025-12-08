@@ -8,7 +8,9 @@ repository = "https://github.com/DavidNzube101/xandeum-prpc-rust"
 homepage = "https://github.com/DavidNzube101/xandeum-prpc-rust"
 documentation = "https://github.com/DavidNzube101/xandeum-prpc-rust/blob/master/examples/get_pods.rs"
 readme = "README.md"
-keywords = ["Solana", "RPC", "API", "Xandeum", "blockchain", "pNode"]
+keywords = ["Solana", "RPC", "Xandeum", "blockchain", "pNode"]
+
+
 categories = ["api-bindings", "asynchronous", "web-programming"]
 exclude = [
     ".gitignore"
