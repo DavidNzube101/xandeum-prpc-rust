@@ -1,0 +1,19 @@
+[package]
+name = "xandeum-prpc"
+version = "0.1.0"
+edition = "2021"
+description = "Rust client for Xandeum pNode pRPC APIs"
+license = "MIT"
+repository = "https://github.com/DavidNzube101/xandeum-prpc-rust"
+homepage = "https://github.com/DavidNzube101/xandeum-prpc-rust"
+documentation = "https://github.com/DavidNzube101/xandeum-prpc-rust"
+readme = "README.md"
+keywords = ["Solana", "RPC", "API", "Xandeum", "blockchain", "pNode"]
+categories = ["api-bindings", "asynchronous", "web-programming"]
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+thiserror = "1.0"
