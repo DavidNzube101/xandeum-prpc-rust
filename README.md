@@ -8,7 +8,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-xandeum-prpc = { path = "../xandeum-prpc-rust" }  # or from crates.io when published
+xandeum-prpc = "0.1.0" 
 ```
 
 ## Usage
