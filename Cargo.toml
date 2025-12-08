@@ -10,6 +10,9 @@ documentation = "https://github.com/DavidNzube101/xandeum-prpc-rust"
 readme = "README.md"
 keywords = ["Solana", "RPC", "API", "Xandeum", "blockchain", "pNode"]
 categories = ["api-bindings", "asynchronous", "web-programming"]
+exclude = [
+    ".gitignore"
+]
 
 [dependencies]
 reqwest = { version = "0.11", features = ["json"] }
