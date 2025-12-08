@@ -8,7 +8,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-xandeum-prpc = "0.1.0" 
+xandeum-prpc = "0.1.3" 
 ```
 
 ## Usage
