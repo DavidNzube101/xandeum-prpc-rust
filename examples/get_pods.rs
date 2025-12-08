@@ -11,7 +11,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Total pods: {}", response.total_count);
             println!("First 5 pods:");
             for pod in response.pods.iter().take(5) {
-                println!("  - {} ({}), last seen: {}", pod.address, pod.version, pod.last_seen_timestamp);
+                let address = pod.address.as_deref().unwrap_or("unknown");
+                let pubkey = pod.pubkey.as_deref().unwrap_or("unknown");
+                let version = pod.version.as_deref().unwrap_or("unknown");
+                println!("  - {} ({}) [{}] v{}, last seen: {}", address, pubkey, version, pod.last_seen_timestamp);
             }
         }
         Err(e) => {

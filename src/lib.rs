@@ -39,10 +39,10 @@ struct RpcError {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Pod {
-    pub address: String,
+    pub address: Option<String>,
     pub last_seen_timestamp: i64,
-    pub pubkey: String,
-    pub version: String,
+    pub pubkey: Option<String>,
+    pub version: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
