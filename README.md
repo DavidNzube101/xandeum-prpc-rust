@@ -8,7 +8,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-xandeum-prpc = "0.1.3" 
+xandeum-prpc = "0.1.4" 
 ```
 
 ## Usage
@@ -18,28 +18,24 @@ use xandeum_prpc::PrpcClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = PrpcClient::new("173.212.220.65");
+    let client = PrpcClient::new("173.212.220.65"); // Replace with a pNode IP
 
-    // Get list of pods
-    let pods = client.get_pods().await?;
-    println!("Found {} pods", pods.total_count);
+    // Get pods with detailed statistics
+    let pods_with_stats = client.get_pods_with_stats().await?;
+    println!("Found {} pods with stats", pods_with_stats.total_count);
 
-    // Get stats for a node
-    let stats = client.get_stats().await?;
-    println!("CPU usage: {:.2}%", stats.cpu_percent);
+    for pod in pods_with_stats.pods {
+        println!("  Pubkey: {:?}, Address: {:?}, Uptime: {:?}, Storage Used: {:?} bytes",
+            pod.pubkey, pod.address, pod.uptime, pod.storage_used);
+    }
 
     Ok(())
 }
 ```
 
-## Running the Example
-
-```bash
-cargo run --example get_pods
-```
-
 ## API
 
-- `PrpcClient::new(ip: &str)` - Create client for a pNode IP
-- `get_pods() -> Result<PodsResponse>` - Get list of pods in gossip
-- `get_stats() -> Result<NodeStats>` - Get statistics for the node
+-   `PrpcClient::new(ip: &str)` - Create client for a pNode IP.
+-   `get_pods() -> Result<PodsResponse>` - Get list of pods in gossip. (Note: Use `get_pods_with_stats` for more data).
+-   `get_pods_with_stats() -> Result<PodsResponse>` - Get list of pods with detailed statistics *introduced in 0.1.4*  .
+-   `get_stats() -> Result<NodeStats>` - Get statistics for a single node.

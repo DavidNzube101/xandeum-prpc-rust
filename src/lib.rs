@@ -40,8 +40,14 @@ struct RpcError {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Pod {
     pub address: Option<String>,
+    pub is_public: Option<bool>,
     pub last_seen_timestamp: i64,
     pub pubkey: Option<String>,
+    pub rpc_port: Option<u32>,
+    pub storage_committed: Option<i64>,
+    pub storage_usage_percent: Option<f64>,
+    pub storage_used: Option<i64>,
+    pub uptime: Option<i64>,
     pub version: Option<String>,
 }
 
@@ -111,6 +117,10 @@ impl PrpcClient {
 
     pub async fn get_pods(&self) -> Result<PodsResponse, PrpcError> {
         self.call("get-pods").await
+    }
+
+    pub async fn get_pods_with_stats(&self) -> Result<PodsResponse, PrpcError> {
+        self.call("get-pods-with-stats").await
     }
 
     pub async fn get_stats(&self) -> Result<NodeStats, PrpcError> {
