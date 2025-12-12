@@ -2,6 +2,7 @@ use reqwest::Client as HttpClient;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use thiserror::Error;
+use tokio::sync::mpsc;
 
 #[derive(Error, Debug)]
 pub enum PrpcError {
@@ -11,7 +12,13 @@ pub enum PrpcError {
     Json(#[from] serde_json::Error),
     #[error("RPC error: {0}")]
     Rpc(String),
+    #[error("Node not found on any seed")]
+    NodeNotFound,
+    #[error("Operation timed out")]
+    Timeout,
 }
+
+// ... (rest of the structs are the same)
 
 #[derive(Serialize)]
 struct RpcRequest {
@@ -78,11 +85,30 @@ pub struct PrpcClient {
     base_url: String,
 }
 
+pub const DEFAULT_SEED_IPS: &[&str] = &[
+    "173.212.220.65",
+    "161.97.97.41",
+    "192.190.136.36",
+    "192.190.136.38",
+    "207.244.255.1",
+    "192.190.136.28",
+    "192.190.136.29",
+    "173.212.203.145",
+];
+
+#[derive(Default)]
+pub struct FindPNodeOptions {
+    pub add_seeds: Option<Vec<String>>,
+    pub replace_seeds: Option<Vec<String>>,
+    pub timeout_seconds: Option<u64>,
+}
+
 impl PrpcClient {
-    pub fn new(ip: &str) -> Self {
+    pub fn new(ip: &str, timeout_seconds: Option<u64>) -> Self {
+        let timeout = timeout_seconds.unwrap_or(8);
         Self {
             http_client: HttpClient::builder()
-                .timeout(Duration::from_secs(3))
+                .timeout(Duration::from_secs(timeout))
                 .build()
                 .unwrap(),
             base_url: format!("http://{}:6000/rpc", ip),
@@ -125,5 +151,40 @@ impl PrpcClient {
 
     pub async fn get_stats(&self) -> Result<NodeStats, PrpcError> {
         self.call("get-stats").await
+    }
+}
+
+pub async fn find_pnode(node_id: &str, options: Option<FindPNodeOptions>) -> Result<Pod, PrpcError> {
+    let opts = options.unwrap_or_default();
+    let timeout = opts.timeout_seconds.unwrap_or(10);
+
+    let seeds: Vec<String> = if let Some(replace) = opts.replace_seeds {
+        replace
+    } else {
+        let mut default_seeds: Vec<String> = DEFAULT_SEED_IPS.iter().map(|s| s.to_string()).collect();
+        if let Some(add) = opts.add_seeds {
+            default_seeds.extend(add);
+        }
+        default_seeds
+    };
+
+    let (tx, mut rx) = mpsc::channel::<Pod>(1);
+
+    for seed_ip in seeds {
+        let tx = tx.clone();
+        let node_id = node_id.to_string();
+        tokio::spawn(async move {
+            let client = PrpcClient::new(&seed_ip, Some(timeout));
+            if let Ok(pods_resp) = client.get_pods().await {
+                if let Some(found_pod) = pods_resp.pods.into_iter().find(|p| p.pubkey.as_deref() == Some(&node_id)) {
+                    let _ = tx.send(found_pod).await;
+                }
+            }
+        });
+    }
+
+    match tokio::time::timeout(Duration::from_secs(timeout), rx.recv()).await {
+        Ok(Some(pod)) => Ok(pod),
+        _ => Err(PrpcError::NodeNotFound),
     }
 }

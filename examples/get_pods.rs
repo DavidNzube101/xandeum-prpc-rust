@@ -1,38 +1,58 @@
-use xandeum_prpc::PrpcClient;
+use xandeum_prpc::{find_pnode, PrpcClient, FindPNodeOptions};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Test with a working seed IP from the curl test
-    let client = PrpcClient::new("173.212.220.65");
+    // --- Usage 1: Create a client for a specific pNode IP ---
+    // The second argument is an optional timeout in seconds.
+    // We pass `None` to use the default timeout (8 seconds).
+    let client = PrpcClient::new("173.212.220.65", None);
 
-    println!("Fetching pods from 173.212.220.65...");
-    match client.get_pods().await {
-        Ok(response) => {
-            println!("Total pods: {}", response.total_count);
-            println!("First 5 pods:");
-            for pod in response.pods.iter().take(5) {
-                let address = pod.address.as_deref().unwrap_or("unknown");
-                let pubkey = pod.pubkey.as_deref().unwrap_or("unknown");
-                let version = pod.version.as_deref().unwrap_or("unknown");
-                println!("  - {} ({}) [{}] v{}, last seen: {}", address, pubkey, version, pod.last_seen_timestamp);
-            }
+    println!("Fetching stats from a single pNode (173.212.220.65)...");
+    match client.get_stats().await {
+        Ok(stats) => {
+            println!(
+                "  - CPU: {:.2}%, RAM: {}MB used / {}MB total, Uptime: {}s",
+                stats.cpu_percent,
+                stats.ram_used / 1024 / 1024,
+                stats.ram_total / 1024 / 1024,
+                stats.uptime
+            );
         }
         Err(e) => {
-            eprintln!("Error fetching pods: {}", e);
+            eprintln!("  - Error fetching stats: {}", e);
         }
     }
 
-    println!("\nFetching stats from 173.212.220.65...");
-    match client.get_stats().await {
-        Ok(stats) => {
-            println!("CPU: {:.2}%, RAM: {}MB used / {}MB total, Uptime: {}s",
-                     stats.cpu_percent,
-                     stats.ram_used / 1024 / 1024,
-                     stats.ram_total / 1024 / 1024,
-                     stats.uptime);
+    // --- Usage 2: Find a specific pNode using the default seed list ---
+    println!("\nFinding a specific pNode across all default seed IPs...");
+    // Use the `find_pnode` helper to concurrently search all seed nodes.
+    // This is much more efficient than creating a client for each seed IP yourself.
+    let node_id_to_find = "HjeRsvpPX4CnJAXW3ua2y1qrRA7t9nf8s4dYgJnavQnC";
+    match find_pnode(node_id_to_find, None).await {
+        Ok(pod) => {
+            println!("  - Successfully found pNode {}!", node_id_to_find);
+            println!("    - Address: {}", pod.address.unwrap_or_default());
+            println!("    - Version: {}", pod.version.unwrap_or_default());
         }
         Err(e) => {
-            eprintln!("Error fetching stats: {}", e);
+            eprintln!("  - Error finding pNode {}: {}", node_id_to_find, e);
+        }
+    }
+
+    // --- Usage 3: Find a pNode using a custom (replaced) seed list ---
+    println!("\nFinding a pNode using a custom seed list...");
+    let options = FindPNodeOptions {
+        replace_seeds: Some(vec!["192.190.136.28".to_string()]),
+        ..Default::default()
+    };
+    let node_id_to_find_2 = "GCoCP7CLvVivuWUH1sSA9vMi9jjaJcXpMwVozMVA6yBg";
+     match find_pnode(node_id_to_find_2, Some(options)).await {
+        Ok(pod) => {
+            println!("  - Successfully found pNode {} on custom seed!", node_id_to_find_2);
+            println!("    - Address: {}", pod.address.unwrap_or_default());
+        }
+        Err(e) => {
+            eprintln!("  - Error finding pNode {}: {}", node_id_to_find_2, e);
         }
     }
 
